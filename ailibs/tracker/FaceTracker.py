@@ -31,7 +31,7 @@ class FaceTracker():
         # store the number of maximum consecutive frames a given
         # object is allowed to be marked as "disappeared" until we
         # need to deregister the object from tracking
-        self.maxDisappeared = kwargs.get('maxDisappeared', 20)
+        self.maxDisappeared = kwargs.get('maxDisappeared', 2)
 
     def register(self, centroid):
         """ add new ID by centroid

@@ -6,3 +6,4 @@ requests==2.24.0
 RPi.GPIO==0.7.0
 torch>=1.6.0
 torchvision>=0.7.0
+opencv-contrib-python

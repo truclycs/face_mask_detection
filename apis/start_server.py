@@ -12,7 +12,8 @@ from ailibs.dectector.ssd.FaceMaskDetector import FaceMaskDetector
 
 
 face_mask_detector = FaceMaskDetector(
-    model_path=os.path.join('ailibs_data', 'model360.pth')
+    model_path=os.path.join('ailibs_data', 'model360.pth'),
+    log=True
 )
 
 

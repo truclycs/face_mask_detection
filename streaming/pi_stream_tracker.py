@@ -14,7 +14,7 @@ from streaming.read_info import camera_source, api
 from ailibs.tracker.FaceTracker import FaceTracker
 
 PORT_PI = 8
-ALERT = 4
+ALERT = 3
 FACE_TRACKERS = FaceTracker(log=True)
 
 
@@ -54,23 +54,23 @@ class Camera(BaseCamera):
             # read current frame
             _, img = camera.read()
 
+            # count frame for skip 
             frame_count += 1
             if frame_count % 5:
-                # encode as a jpeg image and return it
                 yield cv2.imencode('.jpg', img)[1].tobytes()
                 continue
 
+            # Turn off buzz
             if alerting:
                 count_frame_to_off += 1
-                if count_frame_to_off == ALERT // 2:
+                if count_frame_to_off == ALERT:
                     #Off
                     GPIO.output(PORT_PI, GPIO.LOW)
                     count_frame_to_off = 0
                     alerting = False
             
             _, buff = cv2.imencode('.jpg', img)
-            jpg_as_text = base64.b64encode(buff)
-            
+            jpg_as_text = base64.b64encode(buff)            
             response = requests.post(api, json={'img': jpg_as_text}).json()
 
             recs = []
@@ -92,21 +92,18 @@ class Camera(BaseCamera):
                             0.8, 
                             color)
 
+            # tracking
             tracker_faces = FACE_TRACKERS.update(recs)
-            print("z", len(tracker_faces), tracker_faces)
-
-            for (faceID, centroid) in tracker_faces.items():
-                print("id", faceID)
+            for (faceID, _) in tracker_faces.items():
                 if faceID not in track_count:
                     track_count[faceID] = 1
                 else:
-                    print("count", track_count[faceID])
                     track_count[faceID] += 1
                     if track_count[faceID] == ALERT:
                         #On
                         GPIO.output(PORT_PI, GPIO.HIGH)
                         alerting = True
-                        print("heree")
+                        track_count[faceID] = 0
 
             # encode as a jpeg image and return it
             yield cv2.imencode('.jpg', img)[1].tobytes()
