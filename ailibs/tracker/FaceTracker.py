@@ -1,14 +1,10 @@
 # import the necessary packages
+import __init__
 from scipy.spatial import distance as dist
 from collections import OrderedDict
 import numpy as np
-import cv2
 
 from ailibs.__init__ import timeit
-
-UNKNOWN = "Unknown"
-ACCEPT = "ACCEPT"
-ALERT = "ALERT"
 
 
 class FaceTracker():
@@ -195,45 +191,3 @@ class FaceTracker():
 
         # return the set of trackable objects
         return self.objects
-
-    def track_face(self, ID, trackcount, dets, user_list, name_list, flag, frame):
-        # update centroid tracker using the computed set of bounding
-        # box rectangles
-        ACCEPT_COUNT = 2
-        ALERT_COUNT = 10
-        for (faceID, centroid) in self.objects.items():
-            face_utils = zip(dets, user_list)
-            for i, face_util in enumerate(face_utils):
-                # loop over the tracked objects
-                # draw both the ID of the faces and the centroid of the
-                # object on the output frame
-                # centroid = centroid[0]
-                d, NAME = face_util
-                name = NAME['name']
-                [startX, endX, startY, endY] = [
-                    d.left(), d.right(), d.bottom(), d.top()]
-                [cX, cY] = [int((startX + endX) / 2.0),
-                            int((startY + endY) / 2.0)]
-
-                if cX - centroid[0] == 0 and cY - centroid[1] == 0:
-                    if faceID not in ID.keys():
-                        ID[faceID] = UNKNOWN
-                        trackcount[faceID] = 0
-                    if flag:
-                        if (ID[faceID] != name):
-                            trackcount[faceID] -= 1
-                        if (ID[faceID] == name):
-                            trackcount[faceID] += 1
-                        if (trackcount[faceID] < 0):
-                            ID[faceID] = name
-                            trackcount[faceID] = 0
-                        if ID[faceID] not in name_list:
-                            continue
-                        if (trackcount[faceID] > ALERT_COUNT) and (ID[faceID] == UNKNOWN) and (ALERT not in name_list[ID[faceID]]['name']):
-                            name_list[ID[faceID]]['name'] = name_list[ID[faceID]
-                                                                      ]['name'] + " " + ALERT
-                        if (trackcount[faceID] > ACCEPT_COUNT) and (ID[faceID] != UNKNOWN) and (ACCEPT not in name_list[ID[faceID]]['name']):
-                            name_list[ID[faceID]]['name'] = name_list[ID[faceID]
-                                                                      ]['name'] + " " + ACCEPT
-        flag = False
-        return ID, trackcount, flag

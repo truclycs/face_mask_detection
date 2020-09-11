@@ -6,7 +6,7 @@ from flask import Flask, render_template, Response
 if os.environ.get('CAMERA'):
     Camera = import_module('camera_' + os.environ['CAMERA']).Camera
 else:
-    from camera_opencv import Camera
+    from pi_stream_tracker import Camera
 
 from streaming.read_info import IP, port
 
