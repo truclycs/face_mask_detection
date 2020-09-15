@@ -32,7 +32,7 @@ def get_prediction(image_base64):
     """    
     imgdata = base64.b64decode(image_base64)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
     image = Image.open(io.BytesIO(imgdata))
-    return face_mask_detector.detect(np.array(image))
+    return face_mask_detector.detect(np.array(image), detect_nose=False)
 
 
 @app.route('/', methods=['GET', 'POST'])
