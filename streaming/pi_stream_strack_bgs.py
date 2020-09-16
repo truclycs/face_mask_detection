@@ -3,16 +3,25 @@ import cv2
 from base_camera import BaseCamera
 import requests
 import base64
-import json
-import os
+import RPi.GPIO as GPIO
+from time import sleep
+import json 
 import time
+import os
+import dlib
 
 from streaming.read_info import camera_source, api
-from ailibs.bgsubtraction.BGSubtractor import BGSubtractor, BGSubtractionParammeter
+from ailibs.tracker.FaceTracker import FaceTracker
+from aplibs.bgsubtraction.BGSubtractor import BGSubtractor, BGSubtractionParammeter
 min_area = BGSubtractionParammeter.minArea
 threshold = BGSubtractionParammeter.threshold
 padding = BGSubtractionParammeter.padding
 detector_bgs = BGSubtractor(threshold, min_area, padding)
+
+
+PORT_PI = 8
+ALERT = 3
+FACE_TRACKERS = FaceTracker(log=True)
 
 
 class Camera(BaseCamera):
@@ -34,36 +43,48 @@ class Camera(BaseCamera):
         if not camera.isOpened():
             raise RuntimeError('Could not start camera.')
 
-        frame_count = 0
-        id2class = {0: 'mask', 
-                    1: 'no_mask'}
-        scalefactor = 0.75
-        
-        status = True
-        while status:
-            # read current frame
-            status, img = camera.read()
-            if not status:
-                break
+        GPIO.setwarnings(False) # Ignore warning for now
+        GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
+        # Set pin 8 to be an output pin and set initial value to low (off)
+        GPIO.setup(PORT_PI, GPIO.OUT, initial=GPIO.LOW) 
 
+        id2class = {0: 'Mask', 
+                    1: 'NoMask'}
+
+        frame_count = 0    
+        alerting = False 
+        count_frame_to_off = 0
+        track_count = {}
+        scalefactor = 0.75
+
+        while True:
+            # read current frame
+            _, img = camera.read()
+
+            # count frame for skip 
             frame_count += 1
-            if frame_count % 5!= 0:
-                # img1 = cv2.flip(img, 0)
-                # out.write(img1)
+            if frame_count % 5:
                 yield cv2.imencode('.jpg', img)[1].tobytes()
                 continue
 
-            image = cv2.resize(img, (0,0), fx=scalefactor, fy=scalefactor)
-            movingObjects = detector_bgs.detect(img)
-            
-            print("mmm", frame_count, movingObjects)
-            if movingObjects:
-                print("detect")
-                _, buff = cv2.imencode('.jpg', img)
-                jpg_as_text = base64.b64encode(buff)
+            # Turn off buzz
+            if alerting:
+                count_frame_to_off += 1
+                if count_frame_to_off == ALERT:
+                    #Off
+                    GPIO.output(PORT_PI, GPIO.LOW)
+                    count_frame_to_off = 0
+                    alerting = False
 
+            image = cv2.resize(img, (0,0), fx=scalefactor, fy=scalefactor)
+            moving_objects = detector_bgs.detect(img)
+
+            if moving_objects:            
+                _, buff = cv2.imencode('.jpg', img)
+                jpg_as_text = base64.b64encode(buff)            
                 response = requests.post(api, json={'img': jpg_as_text}).json()
-                
+
+                recs = []
                 face_info = json.loads(response['info'])
                 # Draw bounding box
                 for (class_id, conf, xmin, ymin, xmax, ymax) in face_info:
@@ -71,6 +92,8 @@ class Camera(BaseCamera):
                         color = (0, 255, 0)
                     else:
                         color = (0, 0, 255)
+                        rec = dlib.rectangle(xmin, ymin, xmax, ymax)
+                        recs.append(rec)
                     
                     cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, 2)
                     cv2.putText(img, 
@@ -80,9 +103,18 @@ class Camera(BaseCamera):
                                 0.8, 
                                 color)
 
+                # tracking
+                tracker_faces = FACE_TRACKERS.update(recs)
+                for (faceID, _) in tracker_faces.items():
+                    if faceID not in track_count:
+                        track_count[faceID] = 1
+                    else:
+                        track_count[faceID] += 1
+                        if track_count[faceID] == ALERT:
+                            #On
+                            GPIO.output(PORT_PI, GPIO.HIGH)
+                            alerting = True
+                            track_count[faceID] = 0
+
             # encode as a jpeg image and return it
             yield cv2.imencode('.jpg', img)[1].tobytes()
-        
-        # # cap.release()
-        # print('here')
-        # out.release()
