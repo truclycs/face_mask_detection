@@ -2,11 +2,12 @@ import __init__
 import os
 from importlib import import_module
 from flask import Flask, render_template, Response
-# import camera driver
+# import camera driver 
 if os.environ.get('CAMERA'):
     Camera = import_module('camera_' + os.environ['CAMERA']).Camera
 else:
-    from pi_stream_tracker import Camera
+    # from pi_stream_tracker import Camera
+    from camera_opencv import Camera
 
 from streaming.read_info import IP, port
 
