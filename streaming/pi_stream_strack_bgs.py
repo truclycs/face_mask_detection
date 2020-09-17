@@ -12,7 +12,7 @@ import dlib
 
 from streaming.read_info import camera_source, api
 from ailibs.tracker.FaceTracker import FaceTracker
-from aplibs.bgsubtraction.BGSubtractor import BGSubtractor, BGSubtractionParammeter
+from ailibs.bgsubtraction.BGSubtractor import BGSubtractor, BGSubtractionParammeter
 min_area = BGSubtractionParammeter.minArea
 threshold = BGSubtractionParammeter.threshold
 padding = BGSubtractionParammeter.padding
@@ -20,8 +20,8 @@ detector_bgs = BGSubtractor(threshold, min_area, padding)
 
 
 PORT_PI = 8
-ALERT = 3
-FACE_TRACKERS = FaceTracker(log=True)
+ALERT = 4
+FACE_TRACKERS = FaceTracker(log=False)
 
 
 class Camera(BaseCamera):
@@ -61,6 +61,9 @@ class Camera(BaseCamera):
             # read current frame
             _, img = camera.read()
 
+            image = cv2.resize(img, (0,0), fx=scalefactor, fy=scalefactor)
+            moving_objects = detector_bgs.detect(img)
+
             # count frame for skip 
             frame_count += 1
             if frame_count % 5:
@@ -70,19 +73,21 @@ class Camera(BaseCamera):
             # Turn off buzz
             if alerting:
                 count_frame_to_off += 1
-                if count_frame_to_off == ALERT:
+                if count_frame_to_off == ALERT // 2:
                     #Off
                     GPIO.output(PORT_PI, GPIO.LOW)
                     count_frame_to_off = 0
                     alerting = False
 
-            image = cv2.resize(img, (0,0), fx=scalefactor, fy=scalefactor)
-            moving_objects = detector_bgs.detect(img)
-
             if moving_objects:            
                 _, buff = cv2.imencode('.jpg', img)
-                jpg_as_text = base64.b64encode(buff)            
+                jpg_as_text = base64.b64encode(buff)      
+
+                start_time = time.time()      
                 response = requests.post(api, json={'img': jpg_as_text}).json()
+                end_time = time.time()
+
+                print("Time call API: {} ms.".format(int((end_time - start_time) * 1000)))
 
                 recs = []
                 face_info = json.loads(response['info'])

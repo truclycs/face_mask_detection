@@ -17,16 +17,14 @@ printf "[INFO]: API server is running\n"
 # python3 apis/start_server.py
 
 DIR=$(pwd)
-PYTHON=$(find -type f -name "python3")
 FILE_START=$(find -type f -name "start_server.py")
-PYTHON_PATH=$DIR${PYTHON:1}
 START_PATH=$DIR${FILE_START:1}
 
 #write out current crontab
 crontab -l > crontab_run_server_FMD
 #echo new cron into cron file
-echo "0 5 1 * * $PYTHON_PATH $START_PATH" >> crontab_run_server_FMD
-# echo "*/1 * * * * $PYTHON_PATH $START_PATH" >> crontab_run_server_FMD
+echo "0 5 1 * * python3 $START_PATH" >> crontab_run_server_FMD
+# echo "*/1 * * * * python3 $START_PATH" >> crontab_run_server_FMD
 #install new cron file
 crontab crontab_run_server_FMD
 rm crontab_run_server_FMD
