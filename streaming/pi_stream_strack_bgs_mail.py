@@ -9,6 +9,7 @@ import json
 import time
 import os
 import dlib
+import subprocess
 
 from utils.mail_alert.MailAlert import MailAlert
 from streaming.read_info import camera_source, api
@@ -18,12 +19,13 @@ min_area = BGSubtractionParammeter.minArea
 threshold = BGSubtractionParammeter.threshold
 padding = BGSubtractionParammeter.padding
 detector_bgs = BGSubtractor(threshold, min_area, padding)
+mail_alert = MailAlert()
 
-
-PORT_PI = 8
-ALERT = 15
+PYTHON_PATH = os.path.join('streaming', 'send_mail.py')
+PORT_PI = 15
+ALERT = 4
 FACE_TRACKERS = FaceTracker(log=False)
-
+print(PYTHON_PATH)
 
 class Camera(BaseCamera):
     video_source = camera_source
@@ -74,7 +76,7 @@ class Camera(BaseCamera):
             # Turn off buzz
             # if alerting:
             #     count_frame_to_off += 1
-            #     if count_frame_to_off == :
+            #     if count_frame_to_off == ALERT:
             #         #Off
             #         GPIO.output(PORT_PI, GPIO.LOW)
             #         count_frame_to_off = 0
@@ -109,6 +111,7 @@ class Camera(BaseCamera):
                                 0.8, 
                                 color)
 
+                # Turn off buzz
                 if len(recs) == 0:
                     GPIO.output(PORT_PI, GPIO.LOW)
                     count_frame_to_off = 0
@@ -119,14 +122,31 @@ class Camera(BaseCamera):
                 for (faceID, _) in tracker_faces.items():
                     if faceID not in track_count:
                         track_count[faceID] = 1
+                        img_alert = img[ymin:ymax, xmin:xmax]
+                        t1 = time.time()
+                        cv2.imwrite(os.path.join('utils', 'mail_alert', 'images', str(time.time()) + '.png'), img_alert)
+                        t2 = time.time()
+                        print("time_write", t2 - t1)
+                        
+                        print("faceID_first", faceID, track_count[faceID])
                     else:
+                        print("faceID", faceID, track_count[faceID])
                         track_count[faceID] += 1
                         if track_count[faceID] == ALERT:
                             #On
-                            print("count", track_count[faceID])
                             GPIO.output(PORT_PI, GPIO.HIGH)
                             alerting = True
                             track_count[faceID] = 0
+
+                print("frame_alert", mail_alert.check_alert())
+
+                if mail_alert.check_alert():
+                    t1 = time.time()
+                    # mail_alert.send_alert()
+                    command = "nohup python3 {} 2>&1 &".format(PYTHON_PATH)
+                    subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+                    t2 = time.time()
+                    print('time_mail', t2 - t1)
 
             # encode as a jpeg image and return it
             yield cv2.imencode('.jpg', img)[1].tobytes()
