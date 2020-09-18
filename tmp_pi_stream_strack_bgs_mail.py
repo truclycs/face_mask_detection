@@ -59,12 +59,14 @@ class Camera(BaseCamera):
         # count_frame_to_off = 0
         track_count = {}
         scalefactor = 0.3
+        send_mail = False
 
         while True:
             # read current frame
             _, img = camera.read()
 
-            img = cv2.resize(img, (0,0), fx=scalefactor, fy=scalefactor)
+
+            # img = cv2.resize(img, (0,0), fx=scalefactor, fy=scalefactor)
             moving_objects = detector_bgs.detect(img)
 
             # count frame for skip 
@@ -130,7 +132,6 @@ class Camera(BaseCamera):
                 for (faceID, _) in tracker_faces.items():
                     if faceID not in track_count:
                         track_count[faceID] = 1                        
-                        print("faceID_first", faceID, track_count[faceID])
                     else:
                         print("faceID", faceID, track_count[faceID])
                         track_count[faceID] += 1
@@ -143,17 +144,19 @@ class Camera(BaseCamera):
                             t1 = time.time()
                             cv2.imwrite(os.path.join('utils', 'mail_alert', 'images', str(time.time()) + '.png'), img_alert)
                             t2 = time.time()
+                            send_mail = True
                             print("time_write", t2 - t1)
 
-                print("frame_alert", mail_alert.check_alert())
+                print("frame_alert...............", send_mail)
 
-                if mail_alert.check_alert():
+                if send_mail:
                     t1 = time.time()
                     # mail_alert.send_alert()
                     command = "nohup python3 {} 2>&1 &".format(PYTHON_PATH)
                     subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
                     t2 = time.time()
                     print('time_mail', t2 - t1)
+                    send_mail = False
 
             # encode as a jpeg image and return it
             yield cv2.imencode('.jpg', img)[1].tobytes()
