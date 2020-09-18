@@ -23,7 +23,7 @@ mail_alert = MailAlert()
 
 PYTHON_PATH = os.path.join('streaming', 'send_mail.py')
 PORT_PI = 15
-ALERT = 4
+ALERT = 8
 FACE_TRACKERS = FaceTracker(log=False)
 print(PYTHON_PATH)
 
@@ -56,7 +56,7 @@ class Camera(BaseCamera):
 
         frame_count = 0    
         alerting = False 
-        count_frame_to_off = 0
+        # count_frame_to_off = 0
         track_count = {}
         scalefactor = 0.3
 
@@ -81,6 +81,14 @@ class Camera(BaseCamera):
             #         GPIO.output(PORT_PI, GPIO.LOW)
             #         count_frame_to_off = 0
             #         alerting = False
+            if alerting:
+                # count_frame_to_off += 1
+                # if count_frame_to_off == 6 or len(moving_objects) == 0:
+                if len(moving_objects) == 0:
+                    #Off
+                    GPIO.output(PORT_PI, GPIO.LOW)
+                    # count_frame_to_off = 0
+                    alerting = False
 
             if moving_objects:            
                 _, buff = cv2.imencode('.jpg', img)
@@ -114,20 +122,14 @@ class Camera(BaseCamera):
                 # Turn off buzz
                 if len(recs) == 0:
                     GPIO.output(PORT_PI, GPIO.LOW)
-                    count_frame_to_off = 0
+                    # count_frame_to_off = 0
                     alerting = False
 
                 # tracking
                 tracker_faces = FACE_TRACKERS.update(recs)
                 for (faceID, _) in tracker_faces.items():
                     if faceID not in track_count:
-                        track_count[faceID] = 1
-                        img_alert = img[ymin:ymax, xmin:xmax]
-                        t1 = time.time()
-                        cv2.imwrite(os.path.join('utils', 'mail_alert', 'images', str(time.time()) + '.png'), img_alert)
-                        t2 = time.time()
-                        print("time_write", t2 - t1)
-                        
+                        track_count[faceID] = 1                        
                         print("faceID_first", faceID, track_count[faceID])
                     else:
                         print("faceID", faceID, track_count[faceID])
@@ -136,7 +138,12 @@ class Camera(BaseCamera):
                             #On
                             GPIO.output(PORT_PI, GPIO.HIGH)
                             alerting = True
-                            track_count[faceID] = 0
+                            # track_count[faceID] = 0
+                            img_alert = img[ymin:ymax, xmin:xmax]
+                            t1 = time.time()
+                            cv2.imwrite(os.path.join('utils', 'mail_alert', 'images', str(time.time()) + '.png'), img_alert)
+                            t2 = time.time()
+                            print("time_write", t2 - t1)
 
                 print("frame_alert", mail_alert.check_alert())
 

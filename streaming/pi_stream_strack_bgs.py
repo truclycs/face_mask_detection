@@ -21,7 +21,7 @@ detector_bgs = BGSubtractor(threshold, min_area, padding)
 
 
 PORT_PI = 8
-ALERT = 15
+ALERT = 8
 FACE_TRACKERS = FaceTracker(log=False)
 
 
@@ -72,13 +72,14 @@ class Camera(BaseCamera):
             #     continue
 
             # Turn off buzz
-            # if alerting:
-            #     count_frame_to_off += 1
-            #     if count_frame_to_off == :
-            #         #Off
-            #         GPIO.output(PORT_PI, GPIO.LOW)
-            #         count_frame_to_off = 0
-            #         alerting = False
+            if alerting:
+                count_frame_to_off += 1
+                # if count_frame_to_off == 6 or len(moving_objects) == 0:
+                if len(moving_objects) == 0:
+                    #Off
+                    GPIO.output(PORT_PI, GPIO.LOW)
+                    count_frame_to_off = 0
+                    alerting = False
 
             if moving_objects:            
                 _, buff = cv2.imencode('.jpg', img)
@@ -109,7 +110,8 @@ class Camera(BaseCamera):
                                 0.8, 
                                 color)
 
-                if len(recs) == 0:
+                if len(recs) == 0 and alerting:
+                    #Off
                     GPIO.output(PORT_PI, GPIO.LOW)
                     count_frame_to_off = 0
                     alerting = False
@@ -117,6 +119,7 @@ class Camera(BaseCamera):
                 # tracking
                 tracker_faces = FACE_TRACKERS.update(recs)
                 for (faceID, _) in tracker_faces.items():
+                    print("id", faceID)
                     if faceID not in track_count:
                         track_count[faceID] = 1
                     else:
@@ -130,4 +133,3 @@ class Camera(BaseCamera):
 
             # encode as a jpeg image and return it
             yield cv2.imencode('.jpg', img)[1].tobytes()
-
