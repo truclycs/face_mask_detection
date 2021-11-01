@@ -5,7 +5,6 @@ import requests
 import base64
 import json
 import os
-import time
 
 from streaming.read_info import camera_source, api
 from ailibs.bgsubtraction.BGSubtractor import BGSubtractor, BGSubtractionParammeter
@@ -35,10 +34,9 @@ class Camera(BaseCamera):
             raise RuntimeError('Could not start camera.')
 
         frame_count = 0
-        id2class = {0: 'mask', 
+        id2class = {0: 'mask',
                     1: 'no_mask'}
-        scalefactor = 0.75
-        
+
         status = True
         while status:
             # read current frame
@@ -47,15 +45,14 @@ class Camera(BaseCamera):
                 break
 
             frame_count += 1
-            if frame_count % 5!= 0:
+            if frame_count % 5 != 0:
                 # img1 = cv2.flip(img, 0)
                 # out.write(img1)
                 yield cv2.imencode('.jpg', img)[1].tobytes()
                 continue
 
-            image = cv2.resize(img, (0,0), fx=scalefactor, fy=scalefactor)
             movingObjects = detector_bgs.detect(img)
-            
+
             print("mmm", frame_count, movingObjects)
             if movingObjects:
                 print("detect")
@@ -63,7 +60,7 @@ class Camera(BaseCamera):
                 jpg_as_text = base64.b64encode(buff)
 
                 response = requests.post(api, json={'img': jpg_as_text}).json()
-                
+
                 face_info = json.loads(response['info'])
                 # Draw bounding box
                 for (class_id, conf, xmin, ymin, xmax, ymax) in face_info:
@@ -71,18 +68,14 @@ class Camera(BaseCamera):
                         color = (0, 255, 0)
                     else:
                         color = (0, 0, 255)
-                    
+
                     cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, 2)
-                    cv2.putText(img, 
-                                "%s: %.2f" % (id2class[class_id], conf), 
-                                (xmin + 2, ymin - 2),
-                                cv2.FONT_HERSHEY_SIMPLEX,
-                                0.8, 
-                                color)
+                    cv2.putText(img, "%s: %.2f" % (id2class[class_id], conf),
+                                (xmin + 2, ymin - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color)
 
             # encode as a jpeg image and return it
             yield cv2.imencode('.jpg', img)[1].tobytes()
-        
+
         # # cap.release()
         # print('here')
         # out.release()

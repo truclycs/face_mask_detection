@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 
+
 def timeit(func):
     """
     Log executing time if log is enable.

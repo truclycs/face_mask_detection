@@ -1,4 +1,7 @@
-# Script for running API server
+## Demo
+Link: https://www.youtube.com/watch?v=6QF02Ghl_7M
+
+## Script for running API server
 1. Setup virtual environment
 ```bash
 $ bash scripts/venv.sh
@@ -8,7 +11,7 @@ $ bash scripts/venv.sh
 $ bash scripts/deploy_on_server.sh
 ```
 
-# Script for running API on Raspberry Pi
+## Script for running API on Raspberry Pi
 1. Setup virtual environment
 ```bash
 $ bash scripts/venv.sh

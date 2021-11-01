@@ -1,8 +1,5 @@
 import os
 import cv2
-
-
-# from pymemcache.client.base import Client
 import logging as log
 
 
@@ -14,7 +11,6 @@ class ImageStorage:
         __source (string): directory of server storage location .
         __extend (string): format of save image.
     """
-
 
     MAXIMUM = 9223372036854775807
     MAXIMUM_LENGTH = 19
@@ -29,7 +25,7 @@ class ImageStorage:
             extend (): initial value for __extend.
         """
         self.__source = source
-        self.__extend = extend    
+        self.__extend = extend
 
     def write(self, image, image_id):
         """

@@ -1,8 +1,4 @@
-"""
-    Copyright (C) 2016-2018 Hitachi Asia Ltd. All Rights Reserved.
-"""
-import os
-import sys
+""" Copyright (C) 2016-2018 Hitachi Asia Ltd. All Rights Reserved. """
 import cv2
 
 
@@ -23,12 +19,13 @@ class BGSubtractor:
         __mPadding (float): padding scale for detected moving objects
     """
 
-    def __init__(self , 
-                    threshold=BGSubtractionParammeter.threshold,
-                    minArea=BGSubtractionParammeter.minArea,
-                    padding=BGSubtractionParammeter.padding):
+    def __init__(self,
+                 threshold=BGSubtractionParammeter.threshold,
+                 minArea=BGSubtractionParammeter.minArea,
+                 padding=BGSubtractionParammeter.padding):
         """
         Constructor.
+
         Args:
             threshold (float): threshold to binary image after subtract background
             minArea (int): minimum area threshold
@@ -41,8 +38,7 @@ class BGSubtractor:
         self.__mPadding = padding
         self.__mCount = 0
 
-    def detect(self, 
-                npImage):
+    def detect(self, npImage):
         """
         Detect objects in given image using loaded model.
         Args:
@@ -70,13 +66,13 @@ class BGSubtractor:
         self.__mBackground = gray
         thresh = cv2.threshold(fgmask, BGSubtractionParammeter.threshold, 255, cv2.THRESH_BINARY)[1]
         thresh = cv2.dilate(thresh, None, iterations=2)
-        cnts,_ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts, _ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         for c in cnts:
             # if the contour is too small, ignore it
             if cv2.contourArea(c) < self.__mMinArea:
                 continue
-     
+
             # compute the bounding box for the contour
             (x, y, w, h) = cv2.boundingRect(c)
             moving_objects.append([x, y, w, h])

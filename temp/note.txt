@@ -1,5 +1,0 @@
-/home/trucly/FaceMaskDetection/streaming/1.mp4
-"rtsp://aiteam:Binhminh1!@172.16.10.8:554/axis-media/media.amp?resolution=640x480"
-172.16.30.28
-172.16.30.28
-172.16.7.43

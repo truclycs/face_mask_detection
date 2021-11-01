@@ -4,13 +4,11 @@ from base_camera import BaseCamera
 import requests
 import base64
 import RPi.GPIO as GPIO
-from time import sleep
 import json 
 import time
 import os
 import dlib
 
-from utils.mail_alert.MailAlert import MailAlert
 from streaming.read_info import camera_source, api
 from ailibs.tracker.FaceTracker import FaceTracker
 from ailibs.bgsubtraction.BGSubtractor import BGSubtractor, BGSubtractionParammeter
@@ -44,16 +42,16 @@ class Camera(BaseCamera):
         if not camera.isOpened():
             raise RuntimeError('Could not start camera.')
 
-        GPIO.setwarnings(False) # Ignore warning for now
-        GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
+        GPIO.setwarnings(False)  # Ignore warning for now
+        GPIO.setmode(GPIO.BOARD)  # Use physical pin numbering
         # Set pin 8 to be an output pin and set initial value to low (off)
-        GPIO.setup(PORT_PI, GPIO.OUT, initial=GPIO.LOW) 
+        GPIO.setup(PORT_PI, GPIO.OUT, initial=GPIO.LOW)
 
-        id2class = {0: 'Mask', 
+        id2class = {0: 'Mask',
                     1: 'NoMask'}
 
-        frame_count = 0    
-        alerting = False 
+        # frame_count = 0
+        alerting = False
         count_frame_to_off = 0
         track_count = {}
         scalefactor = 0.3
@@ -62,10 +60,10 @@ class Camera(BaseCamera):
             # read current frame
             _, img = camera.read()
 
-            img = cv2.resize(img, (0,0), fx=scalefactor, fy=scalefactor)
+            img = cv2.resize(img, (0, 0), fx=scalefactor, fy=scalefactor)
             moving_objects = detector_bgs.detect(img)
 
-            # count frame for skip 
+            # count frame for skip
             # frame_count += 1
             # if frame_count % 5:
             #     yield cv2.imencode('.jpg', img)[1].tobytes()
@@ -76,16 +74,16 @@ class Camera(BaseCamera):
                 count_frame_to_off += 1
                 # if count_frame_to_off == 6 or len(moving_objects) == 0:
                 if len(moving_objects) == 0:
-                    #Off
+                    # Off
                     GPIO.output(PORT_PI, GPIO.LOW)
                     count_frame_to_off = 0
                     alerting = False
 
-            if moving_objects:            
+            if moving_objects:
                 _, buff = cv2.imencode('.jpg', img)
-                jpg_as_text = base64.b64encode(buff)      
+                jpg_as_text = base64.b64encode(buff)
 
-                start_time = time.time()      
+                start_time = time.time()
                 response = requests.post(api, json={'img': jpg_as_text}).json()
                 end_time = time.time()
 
@@ -101,17 +99,13 @@ class Camera(BaseCamera):
                         color = (0, 0, 255)
                         rec = dlib.rectangle(xmin, ymin, xmax, ymax)
                         recs.append(rec)
-                    
+
                     cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, 2)
-                    cv2.putText(img, 
-                                "%s: %.2f" % (id2class[class_id], conf), 
-                                (xmin + 2, ymin - 2),
-                                cv2.FONT_HERSHEY_SIMPLEX,
-                                0.8, 
-                                color)
+                    cv2.putText(img, "%s: %.2f" % (id2class[class_id], conf),
+                                (xmin + 2, ymin - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color)
 
                 if len(recs) == 0 and alerting:
-                    #Off
+                    # Off
                     GPIO.output(PORT_PI, GPIO.LOW)
                     count_frame_to_off = 0
                     alerting = False
@@ -125,7 +119,7 @@ class Camera(BaseCamera):
                     else:
                         track_count[faceID] += 1
                         if track_count[faceID] == ALERT:
-                            #On
+                            # On
                             print("count", track_count[faceID])
                             GPIO.output(PORT_PI, GPIO.HIGH)
                             alerting = True

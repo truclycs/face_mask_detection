@@ -4,7 +4,6 @@ from base_camera import BaseCamera
 import requests
 import base64
 import RPi.GPIO as GPIO
-from time import sleep
 import json 
 import time
 import os
@@ -34,8 +33,8 @@ class Camera(BaseCamera):
         if not camera.isOpened():
             raise RuntimeError('Could not start camera.')
 
-        GPIO.setwarnings(False) # Ignore warning for now
-        GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
+        GPIO.setwarnings(False)  # Ignore warning for now
+        GPIO.setmode(GPIO.BOARD)  # Use physical pin numbering
         # Set pin 8 to be an output pin and set initial value to low (off)
         GPIO.setup(PORT_PI, GPIO.OUT, initial=GPIO.LOW) 
 
@@ -44,16 +43,16 @@ class Camera(BaseCamera):
 
         frame_count = 0
         count_frame_to_alert = 0
-        need_alert = False       
-        alerting = False 
+        need_alert = False
+        alerting = False
         count_frame_to_off = 0
-        
+
         while True:
             # read current frame
             _, img = camera.read()
 
             if count_frame_to_alert == ALERT:
-                #On
+                # On
                 GPIO.output(PORT_PI, GPIO.HIGH)
                 alerting = True
                 count_frame_to_alert = 0
@@ -67,18 +66,18 @@ class Camera(BaseCamera):
             if alerting:
                 count_frame_to_off += 1
                 if count_frame_to_off == ALERT // 2:
-                    #Off
+                    # Off
                     GPIO.output(PORT_PI, GPIO.LOW)
                     count_frame_to_off = 0
                     alerting = False
-            
+
             _, buff = cv2.imencode('.jpg', img)
             jpg_as_text = base64.b64encode(buff)
-            
+
             t1 = time.time()
             response = requests.post(api, json={'img': jpg_as_text}).json()
             t2 = time.time()
-            
+
             print("time", t1, t2, t2 - t1)
 
             face_info = json.loads(response['info'])
@@ -88,15 +87,11 @@ class Camera(BaseCamera):
                     color = (0, 255, 0)
                 else:
                     color = (0, 0, 255)
-                    need_alert = True 
-                
+                    need_alert = True
+
                 cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, 2)
-                cv2.putText(img, 
-                            "%s: %.2f" % (id2class[class_id], conf), 
-                            (xmin + 2, ymin - 2),
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            0.8, 
-                            color)
+                cv2.putText(img, "%s: %.2f" % (id2class[class_id], conf),
+                            (xmin + 2, ymin - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color)
 
             if need_alert:
                 count_frame_to_alert += 1

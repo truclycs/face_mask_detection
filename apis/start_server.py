@@ -1,8 +1,7 @@
 import __init__
 import os
-from flask import Flask, render_template, request, redirect
+from flask import Flask, request
 import base64
-import urllib.request
 import io
 import numpy as np
 from PIL import Image
@@ -11,26 +10,22 @@ import json
 from ailibs.dectector.ssd.FaceMaskDetector import FaceMaskDetector
 
 
-face_mask_detector = FaceMaskDetector(
-    model_path=os.path.join('ailibs_data', 'model360.pth'),
-    log=True
-)
-
-
+face_mask_detector = FaceMaskDetector(model_path=os.path.join('ailibs_data', 'model360.pth'), log=True)
 app = Flask(__name__)
 
 
 def get_prediction(image_base64):
-    """Get infomation of all face mask in the image from detector
+    """
+    Get infomation of all face mask in the image from detector
 
     Args:
         image_base64: image in base64
 
     Returns:
         result (dict): information of faces (id, conf, xmin, ymin, xmax, ymax)
+    """
 
-    """    
-    imgdata = base64.b64decode(image_base64)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+    imgdata = base64.b64decode(image_base64)
     image = Image.open(io.BytesIO(imgdata))
     return face_mask_detector.detect(np.array(image), detect_nose=False)
 

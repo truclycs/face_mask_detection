@@ -1,4 +1,3 @@
-import os
 import cv2
 from streaming import PYTHON_PATH
 
@@ -12,14 +11,11 @@ UNKNOWN = "Unknown"
 class Alert():
     """
     This is implementation for alert message.
-
     """
 
     def __init__(self, **kwargs):
         """
         Constructor.
-        Args:
-
         """
         # alert images storage
         self.alert_path = kwargs.get('images')

@@ -9,21 +9,16 @@ import smtplib
 from email.mime.base import MIMEBase
 from email import encoders
 from imutils import paths
-from PIL import Image
-import glob
 
 
 class MailAlert():
     """
     This is implementation for sending alert mail.
-
     """
 
     def __init__(self, **kwargs):
         """
         Constructor.
-        Args:
-
         """
         self.log = kwargs.get('log', False)
         # receiver email addresses

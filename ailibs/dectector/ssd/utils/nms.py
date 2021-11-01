@@ -1,16 +1,12 @@
 import numpy as np
 
 
-def single_class_non_max_suppression(bboxes, 
-                                        confidences, 
-                                        conf_thresh=0.2, 
-                                        iou_thresh=0.5):
-    """Do nms on single class.
-    Hint: For the specific class, given the bbox and its confidence,
-    1) Sort the bbox according to the confidence from top to down, 
-    we call this a set.
-    2) Select the bbox with the highest confidence, remove it from set, 
-    and do IOU calculate with the rest bbox.
+def single_class_non_max_suppression(bboxes, confidences, conf_thresh=0.2, iou_thresh=0.5):
+    """
+    Do nms on single class.
+    Hint: For the specific class, given the bbox and its confidence
+    1) Sort the bbox according to the confidence from top to down, we call this a set.
+    2) Select the bbox with the highest confidence, remove it from set, and do IOU calculate with the rest bbox.
     3) Remove the bbox whose IoU is higher than the iou_thresh from the set.
     4) Loop step 2 and 3, until the set is empty.
 
@@ -22,10 +18,9 @@ def single_class_non_max_suppression(bboxes,
 
     Returns:
         result (list): A list of filtered proposals.
-
     """
 
-    if len(bboxes) == 0: 
+    if len(bboxes) == 0:
         return []
 
     conf_keep_idx = np.where(confidences > conf_thresh)[0]

@@ -1,4 +1,4 @@
-import time 
+import time
 import cv2
 
 from BGSubtractor import BGSubtractor
@@ -17,9 +17,9 @@ while (video.isOpened()):
     # check if the file has read the end
     if not success:
         break
-    
+
     start = time.time()
-    image = cv2.resize(image, (0,0), fx=scalefactor, fy=scalefactor)
+    image = cv2.resize(image, (0, 0), fx=scalefactor, fy=scalefactor)
     movingObjects = detector.detect(image)
     end = time.time()
     # print((end - start)*1000)
@@ -32,9 +32,10 @@ while (video.isOpened()):
             bgcount += 1
 
         print('Time', int((end - start)*1000), "BG :", bgcount, 'HAAR : ', haarcount)
-        cv2.imshow('frame',image)
+        cv2.imshow('frame', image)
         key = cv2.waitKey(1) & 0xFF
 
         # if the `q` key is pressed, break from the lop
         if key == ord("q"):
             break
+        

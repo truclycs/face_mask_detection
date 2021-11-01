@@ -10,15 +10,13 @@ from ailibs.__init__ import timeit
 class FaceTracker():
     """
     This is implementation for tracking face.
-
     """
 
     def __init__(self, **kwargs):
         """
         Constructor.
-        Args:
-
         """
+
         self.log = kwargs.get('log', False)
         # initialize the next unique object ID along with two ordered
         # dictionaries used to keep track of mapping a given object

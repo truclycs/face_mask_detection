@@ -2,13 +2,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
 
 __weights_dict = dict()
 
 
 def load_weights(weight_file):
-    if weight_file == None:
+    if weight_file is None:
         return
 
     try:
@@ -136,7 +135,7 @@ class KitModel(nn.Module):
         conv2d_2 = self.conv2d_2(conv2d_2_pad)
         conv2d_2_bn = self.conv2d_2_bn(conv2d_2)
         conv2d_2_activation = F.relu(conv2d_2_bn)
-        #maxpool2d_2_pad = F.pad(conv2d_2_activation, (0, 1, 0, 1), value=float('-inf'))
+        # maxpool2d_2_pad = F.pad(conv2d_2_activation, (0, 1, 0, 1), value=float('-inf'))
         maxpool2d_2 = F.max_pool2d(conv2d_2_activation, kernel_size=(
             2, 2), stride=(2, 2), padding=0, ceil_mode=False)
         conv2d_3_pad = F.pad(maxpool2d_2, (1, 1, 1, 1))

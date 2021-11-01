@@ -3,19 +3,14 @@ import os
 import glob
 import cv2
 import dlib
-# import math
 import numpy
-import yaml
 import threading
 import operator
 from collections import Counter
-# import cvlib.utils
 import time
 import base64
 
 from ast import literal_eval
-# from scipy.spatial import distance
-# from PIL import Image, ImageDraw, ImageFont
 
 IMAGE_SHOW = 0
 
@@ -23,7 +18,7 @@ IMAGE_SHOW = 0
 class CyclicTimer:
     """
     Cyclic timer, use for ingesting process.
-    
+
     Attributes:
         callback (function): function to callback.
         kwargs (dictionary): arguments of callback function.
@@ -53,22 +48,17 @@ class CyclicTimer:
         self.cond = threading.Condition(self.lock)
 
         # Declare a thread to handle callback
-        self.thread = threading.Thread(target = self._callback)
+        self.thread = threading.Thread(target=self._callback)
         self.thread.start()
 
     def _callback(self):
         """
         Callback thread of timer.
-        
-        Args:
-            None
-        Returns:
-            None
         """
 
         while (1):
             self.lock.acquire()
-            if (self.isStart == False):
+            if (not self.isStart):
                 self.cond.wait()
             self.lock.release()
             time.sleep(self.interval)
@@ -77,15 +67,10 @@ class CyclicTimer:
     def start(self):
         """
         Start cyclic timer.
-
-        Args:
-            None
-        Returns:
-            None
         """
 
         self.lock.acquire()
-        if (self.isStart == True):
+        if (self.isStart):
             self.lock.release()
             return
 
@@ -96,11 +81,6 @@ class CyclicTimer:
     def stop(self):
         """
         Stop cyclic timer.
-
-        Args:
-            None.
-        Returns:
-            None.
         """
 
         self.lock.acquire()
@@ -112,7 +92,7 @@ class Utilities:
     """
     Utility functions.
     """
-    MIN_SIZE = (70,70)
+    MIN_SIZE = (70, 70)
     HISTOGRAM_SIZE_HSV = [6, 8, 4]
     HISTOGRAM_SIZE_BGR = [8, 8, 8]
 
@@ -175,9 +155,8 @@ class Utilities:
                 int(rect[0]), int(rect[1]),
                 int(rect[2]+rect[0]), int(rect[3]+rect[1]))
         else:
-            return [ \
-                int(rect.left()), int(rect.top()), \
-                int(rect.right()-rect.left()), int(rect.bottom()-rect.top())]
+            return [int(rect.left()), int(rect.top()),
+                    int(rect.right()-rect.left()), int(rect.bottom()-rect.top())]
 
     @staticmethod
     def uniteRectangles(a, b, inputType="cv2"):
@@ -391,25 +370,17 @@ class Utilities:
         sumValue = 0.0
 
         # based on range of different bins, select bins which has the same color
-        for ibin in range(
-            max(0, colorBin[0]-diffBins),
-            min(size[0], colorBin[0]+diffBins+1)):
+        for ibin in range(max(0, colorBin[0]-diffBins), min(size[0], colorBin[0]+diffBins+1)):
             # color bins near first channel
-            for jbin in range(
-                max(0, colorBin[1]-diffBins),
-                min(size[1], colorBin[1]+diffBins+1)):
-                for kbin in range(
-                    max(0, colorBin[2]-diffBins),
-                    min(size[2], colorBin[2]+diffBins+1)):
+            for jbin in range(max(0, colorBin[1]-diffBins), min(size[1], colorBin[1]+diffBins+1)):
+                for kbin in range(max(0, colorBin[2]-diffBins), min(size[2], colorBin[2]+diffBins+1)):
                     # color bins near third channel
                     sumValue += histogram[(ibin*size[1]+jbin)*size[2]+kbin]
         # return the frequency value of the index bin in histogram
         return sumValue
 
     @staticmethod
-    def compareHistograms(
-        histogram1, histogram2,
-        algorithm=cv2.HISTCMP_BHATTACHARYYA):
+    def compareHistograms(histogram1, histogram2, algorithm=cv2.HISTCMP_BHATTACHARYYA):
         """
         Compare histograms.
 
@@ -435,10 +406,8 @@ class Utilities:
         return cv2.compareHist(histogram1, histogram2, algorithm)
 
     @staticmethod
-    def compareHistogramImages(
-        image1, image2,
-        algorithm=cv2.HISTCMP_BHATTACHARYYA, color="bgr",
-        mask1=None, mask2=None, size=None):
+    def compareHistogramImages(image1, image2, algorithm=cv2.HISTCMP_BHATTACHARYYA,
+                               color="bgr", mask1=None, mask2=None, size=None):
         """
         Compare histogram images.
 
@@ -469,10 +438,8 @@ class Utilities:
         Returns:
             cropImage (numpy array): crop image.
         """
-        return image[ \
-            max(0, rect[1]):min(rect[1]+rect[3], image.shape[0]), \
-            max(0, rect[0]):min(rect[0]+rect[2], image.shape[1])
-            ].copy()
+        return image[max(0, rect[1]):min(rect[1]+rect[3], image.shape[0]),
+                     max(0, rect[0]):min(rect[0]+rect[2], image.shape[1])].copy()
 
     @staticmethod
     def convertListArrayToTupleInt(a):
@@ -541,9 +508,8 @@ class Utilities:
                     numpy.array([float(x) for x in line.split()]))
         return objectPoints, imagePoints
 
-
     @staticmethod
-    def readCSVFile(csvFileName, numOfField = 1, delimiter = ' ', quoteChar = '|'):
+    def readCSVFile(csvFileName, numOfField=1, delimiter=' ', quoteChar='|'):
         """
          Read all data from a csv file to a list
          each element in the list is a sub-list indicates data of a column field
@@ -562,9 +528,8 @@ class Utilities:
         for i in range(numOfField):
             data.append([])
         spamreader = None
-        with open(csvFileName, newline = '') as csvFile:
-            spamreader = csv.reader(
-                csvFile, delimiter = delimiter, quotechar = quoteChar)
+        with open(csvFileName, newline='') as csvFile:
+            spamreader = csv.reader(csvFile, delimiter=delimiter, quotechar=quoteChar)
             for row in spamreader:
                 for i in range(numOfField):
                     if i >= len(row):
@@ -594,7 +559,6 @@ class Utilities:
                 outputFile.write(
                     str(i)+" "+imageFolderPaths[i]+imagePaths[j]+"\n")
         outputFile.close()
-
 
     @staticmethod
     def refineImageData(positivePath, negativePath, width, height):
@@ -629,8 +593,7 @@ class Utilities:
             else:
                 dw = image.shape[1]-width
                 dh = image.shape[0]-height
-                image = image[int(dh/2):int(dh/2)+height, \
-                    int(dw/2):int(dw/2)+width]
+                image = image[int(dh/2):int(dh/2)+height, int(dw/2):int(dw/2)+width]
             cv2.imwrite(imageName, image)
             print("Refined positive image "+imageName)
         for imageName in negativeImageNames:
@@ -648,7 +611,7 @@ class Utilities:
             os.remove(imageName)
 
     @staticmethod
-    def showImage(windowName, imageData, waitKey = -1):
+    def showImage(windowName, imageData, waitKey=-1):
         """
         Show image.
 
@@ -693,7 +656,7 @@ class Utilities:
             inputMap (array): input map.
             key (int): keyword to access map data.
         Returns:
-            value (float): value take from map. 
+            value (float): value take from map.
         """
 
         value = None
@@ -704,7 +667,7 @@ class Utilities:
 
         return value
 
-    @staticmethod  
+    @staticmethod
     def calculateLineCoefficients(point1, point2):
         """
         Produces coefs A, B, C of line equation by two points provided
@@ -724,7 +687,7 @@ class Utilities:
         C = (point1[0]*point2[1]-point2[0]*point1[1])
         return A, B, -C
 
-    @staticmethod  
+    @staticmethod
     def getIntersectionOfTwoLines(line1, line2):
         """
         Finds intersection point (if any) of two lines provided by coefs.
@@ -767,18 +730,18 @@ class Utilities:
         mostCommonElement = None
         if events:
             events = events[:length]
-            idxs = {k: len(events)-v for v,k in enumerate(events[::-1])}
+            idxs = {k: len(events)-v for v, k in enumerate(events[::-1])}
             c = Counter(events)
             b = list(c.items())
             b.sort(key=lambda x: (-x[1], idxs[x[0]]))
-            mostCommonElemet = b[0][0]
-        return mostCommonElemet
+            mostCommonElement = b[0][0]
+        return mostCommonElement
 
-    @staticmethod    
+    @staticmethod
     def get_sub_path(input_path):
         """"
         This function return sub path from input_path with latest index in input folder.
-        
+
         Args:
             input_path (str): location of folder
 
@@ -800,6 +763,7 @@ class Utilities:
             sub_path = os.path.join(input_path, str(0))
 
         return sub_path
+
 
 class ByteDumper:
     """
@@ -845,6 +809,7 @@ class ByteDumper:
 
         rect = rect.astype(numpy.int32)
         return rect.tobytes()
+
     @staticmethod
     def loadRectangle(byte):
         """

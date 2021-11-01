@@ -1,10 +1,10 @@
-"""
-    Copyright (C) 2016-2018 Hitachi Asia Ltd. All Rights Reserved.
-"""
+""" Copyright (C) 2016-2018 Hitachi Asia Ltd. All Rights Reserved. """
 import os
 import sys
 import cv2
 
+from BGSubtractor import BGSubtractor
+# from cvlib.detector.haar.MultiHaarDetector import MultiHaarDetector
 
 # add absolute path of cvlib to PYTHONPATH
 PYTHON_PATH = os.path.abspath(os.path.join(os.path.abspath(__file__), "..", "..", "..", ".."))
@@ -12,11 +12,8 @@ PYTHON_PATH = os.path.abspath(os.path.join(os.path.abspath(__file__), "..", ".."
 sys.path.append(PYTHON_PATH)
 os.chdir(PYTHON_PATH)
 
-
-from BGSubtractor import BGSubtractor
-# from cvlib.detector.haar.MultiHaarDetector import MultiHaarDetector
-
 SKIP_FRAME = 1
+
 
 class BGSubtractionParammeter:
     minArea = 1000
@@ -36,16 +33,12 @@ class BGSubtractionDetector:
         __mDetector (object): detector using Haar-Cascade.
     """
 
-    def __init__(self , 
-                    objectTypes=[],
-                    skipFrame=SKIP_FRAME,
-                    vehicleClassifier=0,
-                    threshold=BGSubtractionParammeter.threshold,
-                    minArea=BGSubtractionParammeter.minArea,
-                    padding=BGSubtractionParammeter.padding, 
-                    gpu=False):
+    def __init__(self, objectTypes=[], skipFrame=SKIP_FRAME, vehicleClassifier=0,
+                 threshold=BGSubtractionParammeter.threshold, minArea=BGSubtractionParammeter.minArea,
+                 padding=BGSubtractionParammeter.padding, gpu=False):
         """
         Constructor.
+
         Args:
             objectType (int): type of object.
             vehicleClassifierMode (int): vehicle classifier type
@@ -61,17 +54,15 @@ class BGSubtractionDetector:
         self.__mCount = 0
 
     def __str__(self):
-        """
-        Name of BGSubtractionDetector class.
-        """
+        """ Name of BGSubtractionDetector class. """
 
         name = self.__class__.__name__ + '_' + str(self.__mDetector)
         return name
 
-    def detect(self, 
-                image):
+    def detect(self, image):
         """
         Detect objects in given image using mix of background subtraction and HAAR/SVM.
+
         Args:
             image (numpy array): image contains objects.
 
@@ -84,16 +75,15 @@ class BGSubtractionDetector:
             movingObjects = []
             movingObjects = self.__mBackgroundSubtractor.detect(image)
             if movingObjects is not None:
-                results  =self.classifyImage(image)
+                results = self.classifyImage(image)
         self.__mCount = (self.__mCount + 1) % self.__mSkipFrame
 
         return results
 
-    def classifyObjects(self, 
-                            image, 
-                            movingObjects):
+    def classifyObjects(self, image, movingObjects):
         """
         Classify moving objects using HAAR/SVM.
+
         Args:
             image (numpy array): input image
             movingObjects (list): list of moving objects detected by BGSubtraction
@@ -123,10 +113,10 @@ class BGSubtractionDetector:
 
         return objList
 
-    def classifyImage(self, 
-                            image):
+    def classifyImage(self, image):
         """
         Classify moving objects using HAAR/SVM.
+
         Args:
             image (numpy array): input image
 
@@ -138,15 +128,15 @@ class BGSubtractionDetector:
         objList = self.__mDetector.detect(image)
         return objList
 
+
 if __name__ == '__main__':
     import time
     # objectType = OBJECTTYPE.HUMAN
     # print(cv2.__version__)
     scalefactor = 0.75
-    objectTypes  =[1, 1, 1]
-    detector  = BGSubtractionDetector(objectTypes)
+    objectTypes = [1, 1, 1]
+    detector = BGSubtractionDetector(objectTypes)
     # video_path = '/home/nhanvo/kdeploy/videos/TownCentreXVID.avi'
-    
 
     video = cv2.VideoCapture(0)
 
@@ -157,10 +147,10 @@ if __name__ == '__main__':
 
         # check if the file has read the end
         if not success:
-         break
+            break
         start = time.time()
-        image = cv2.resize(image, (0,0), fx=scalefactor, fy=scalefactor)
-        movingObjects, objList =  detector.detect(image)
+        image = cv2.resize(image, (0, 0), fx=scalefactor, fy=scalefactor)
+        movingObjects, objList = detector.detect(image)
         end = time.time()
         # print((end - start)*1000)
         if movingObjects is not None:
@@ -174,14 +164,14 @@ if __name__ == '__main__':
                 [objType, shape, positions] = obj
                 for pos in positions:
                     [x, y, w, h] = pos
-                    image = cv2.rectangle(image, (x, y), (x + w, y + h), (255,0,255), 2)
-                    image = cv2.putText(image,shape,(x,y), cv2.FONT_HERSHEY_SIMPLEX,0.5,(255,0,255),2,cv2.LINE_AA)
+                    image = cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 255), 2)
+                    image = cv2.putText(image, shape, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2, cv2.LINE_AA)
                     haarcount += 1
 
             print('Time', int((end - start)*1000), "BG :", bgcount, 'HAAR : ', haarcount)
-            cv2.imshow('frame',image)
+            cv2.imshow('frame', image)
             key = cv2.waitKey(1) & 0xFF
- 
+
             # if the `q` key is pressed, break from the lop
             if key == ord("q"):
                 break
